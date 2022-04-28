@@ -12,7 +12,7 @@ const grantGatewayTransferRights = async (sdk: Nevermined, address: string): Pro
   console.info('Granting gateway mint access..');
   const isApproved = await sdk.keeper.nftUpgradeable.isApprovedForAll(address, GATEWAY_ADDRESS);
   console.log('approved', isApproved);
-  if (!isApproved) {
+  if (!isApproved || true) {
     const [account] = await sdk.accounts.list();
     const { transferNftCondition } = sdk.keeper.conditions;
     await sdk.nfts.setApprovalForAll(transferNftCondition.address, true, account);
@@ -22,35 +22,56 @@ const grantGatewayTransferRights = async (sdk: Nevermined, address: string): Pro
 };
 
 const Childs = () => {
-  const celo = useContractKit();
+  const { kit, account, address, connect } = useContractKit();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [sdk, setSdk] = useState({} as Nevermined);
+  const [web3, setWeb3] = useState({} as any);
+  const [accounts, setAccounts] = useState([] as any)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const load = async (): Promise<void> => {
+        console.log(await kit.web3.eth.getAccounts())
+      }
+      load()
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     try {
       const loadNevermined = async (): Promise<void> => {
-        if (!celo?.kit?.web3 || !celo?.address || !celo?.account) return;
-        console.log('celo address', celo.address);
-        console.log('celo account', celo.account);
-        console.log('Start Loading SDK..');
-        setIsLoading(true);
-        Promise.resolve(
-          Nevermined.getInstance({
-            ...generalConfig,
-            web3Provider: celo.kit.web3
-          })
-        ).then(async (nvmSdk: Nevermined) => {
-          if (!celo.address) return;
-          console.log('SDK LOADED:', nvmSdk);
-          Promise.resolve(grantGatewayTransferRights(nvmSdk, celo.address)).then((response) => {
-            console.log('response', response);
-            setSdk(nvmSdk);
-            Promise.resolve(nvmSdk.accounts.list()).then((accts) => {
-              console.log('SDK Accounts:', accts);
-            });
-            setIsLoading(false);
-          });
-        });
+        if (!kit?.web3 || !address || !account) return;
+        console.log('celo address', address);
+        console.log('celo account', account);
+        console.log('celo web3 accounts', await kit.web3.eth.getAccounts())
+        setAccounts(await kit.web3.eth.getAccounts())
+        if (Object.keys(web3).length === 0) {
+          console.log('set', kit.web3)
+          setWeb3(kit.web3)
+        }
+        console.log(web3)
+        // console.log('Start Loading SDK..');
+        // setIsLoading(true);
+        // Promise.resolve(
+        //   Nevermined.getInstance({
+        //     ...generalConfig,
+        //     web3Provider: kit.web3
+        //   })
+        // ).then(async (nvmSdk: Nevermined) => {
+        //   if (!address) return;
+        //   console.log('post celo web3 accounts', await kit.web3.eth.getAccounts())
+        //   console.log('SDK LOADED:', nvmSdk);
+        //   Promise.resolve(grantGatewayTransferRights(nvmSdk, address)).then((response) => {
+        //     console.log('response', response);
+        //     // setSdk(nvmSdk);
+        //   Promise.resolve(nvmSdk.accounts.list()).then((accts) => {
+        //     console.log('SDK Accounts:', accts);
+        //   });
+        //   console.log(account)
+        //     // setIsLoading(false);
+        //   });
+        // });
       };
       const sdkAlreadyLoaded = Object.keys(sdk).length > 0;
       !sdkAlreadyLoaded && loadNevermined();
@@ -58,11 +79,12 @@ const Childs = () => {
       console.log('err here');
       console.log(err);
     }
-  }, [celo]);
+  }, [kit, address, account, sdk]);
 
   return (
     <div>
-      <button onClick={celo.connect}>connect with celo</button>
+        <button onClick={connect}>connect with celo</button>
+        { kit?.web3 && accounts[0] }
     </div>
   );
 };
