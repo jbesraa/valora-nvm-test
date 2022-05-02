@@ -30,33 +30,27 @@ const Childs = () => {
   const [error, setError] = useState({} as any)
 
   useEffect(() => {
-      try {
-        const load = async (): Promise<void> => {
-          try {
-            if (!kit?.web3 || !address || !account) return
-            setIsLoading(true)
-            console.log('celo address', address)
-            console.log('celo account', account)
-            console.log('web3 account', await kit.web3.eth.getAccounts())
-            const nvmInstance = await Nevermined.getInstance({
-                ...generalConfig,
-                web3Provider: kit.web3
-            })
-            console.log('SDK LOADED:', nvmInstance)
-            setNvm(nvmInstance)
-          } catch (err) {
-            console.error(err)
-            setError(err)
-          }
-          setIsLoading(false)
+      const load = async (): Promise<void> => {
+        try {
+          if (!kit?.web3 || !address || !account) return
+          setIsLoading(true)
+          console.log('celo address', address)
+          console.log('celo account', account)
+          console.log('web3 account', await kit.web3.eth.getAccounts())
+          const nvmInstance = await Nevermined.getInstance({
+              ...generalConfig,
+              web3Provider: kit.web3
+          })
+          console.log('SDK LOADED:', nvmInstance)
+          setNvm(nvmInstance)
+        } catch (err) {
+          console.error(err)
+          setError(err)
         }
-        const nvmAlreadyLoaded = !!Object.keys(nvm).length
-        !nvmAlreadyLoaded && load()
-      } catch (err) {
-        console.error(err)
-        setError(err)
         setIsLoading(false)
       }
+      const nvmAlreadyLoaded = !!Object.keys(nvm).length
+      !nvmAlreadyLoaded && load()
   }, [account, address, connect, kit])
 
   useEffect(() => {
